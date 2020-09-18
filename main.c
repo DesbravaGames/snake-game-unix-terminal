@@ -2,8 +2,7 @@
 #include <stdlib.h>
 #include <ncurses.h>
 #include <time.h>
-#include "chbuffer.h"
-#include "buffer_drawer.h"
+#include "buffer_drawer.c"
 
 #define PLAY 0
 #define GAMEOVER 1
@@ -26,10 +25,10 @@ void carregar() {
  fptr = fopen("recorde.dat", "r");
     if(fptr) {
         fscanf(fptr,"%d",&recorde);
+        fclose(fptr);
     }
-  fclose(fptr);
 }
-char *str_pontos;
+char str_pontos[30];
 
 typedef struct {
     int x,y;
@@ -45,12 +44,12 @@ Vec2 comida1;
 Vec2 comida2;
 
 void reposicionar_comida1(){
-        comida1.y=(rand() % (buffer_getHeight()-3))+1;
-        comida1.x=(rand() % (buffer_getWidth()-3))+1;
+        comida1.y=(rand() % (buffer.height-3))+1;
+        comida1.x=(rand() % (buffer.width-3))+1;
 }
 void reposicionar_comida2(){
-        comida2.y=(rand() % (buffer_getHeight()-3)+1);
-        comida2.x=(rand() % (buffer_getWidth()-3))+1;
+        comida2.y=(rand() % (buffer.height-3)+1);
+        comida2.x=(rand() % (buffer.width-3))+1;
 }
 struct Cobrinha {
     Vec2 position;
@@ -80,30 +79,30 @@ void init_rabo(Rabo *rabo) {
 void init_cobrinha() {
     cobrinha.direction=0;
     init_vec2(&cobrinha.position);
-    cobrinha.position.x=buffer_getWidth()/2;
-    cobrinha.position.y=buffer_getHeight()/2;
+    cobrinha.position.x=buffer.width/2;
+    cobrinha.position.y=buffer.height/2;
     cobrinha.r=NULL;
     liberarRabo();
 }
 void desenharRabo(Rabo *r) {
  if(r) {
         if(r->r) {
-        buffer_write(r->position.x,r->position.y,'o');
+        buffer_write(&buffer,r->position.x,r->position.y,'o');
         desenharRabo(r->r);
         } else {
-            buffer_write(r->position.x,r->position.y,'o');
+            buffer_write(&buffer,r->position.x,r->position.y,'o');
         }
     }
 }
 void desenharCobrinha() {
-   buffer_write(cobrinha.position.x,cobrinha.position.y,'O');
+   buffer_write(&buffer,cobrinha.position.x,cobrinha.position.y,'O');
     desenharRabo(cobrinha.r);
 }
 void desenharComida1() {
-    buffer_write(comida1.x,comida1.y,'x');
+    buffer_write(&buffer,comida1.x,comida1.y,'x');
 }
 void desenharComida2() {
-    buffer_write(comida2.x,comida2.y,'x');
+    buffer_write(&buffer,comida2.x,comida2.y,'x');
 }
 
 void atualizarRabo(Rabo *r) {
@@ -127,9 +126,20 @@ void criarRabo() {
                 } else cobrinha.r=r;
               ////*/
 }
+
+int colide_com_rabo(Vec2 *pos, Rabo *r) {
+    if(r) {
+        if(pos->x==r->position.x && pos->y==r->position.y) {
+            return true;
+        } else {
+            return colide_com_rabo(pos,r->r);
+         }
+    }
+    return 0;
+}
 void atualizarCobra() {
-    int width=buffer_getWidth()-2;
-    int height=buffer_getHeight()-2;
+    int width=buffer.width-2;
+    int height=buffer.height-2;
     int key=chlib_getKey();
 
     if(key) {
@@ -190,22 +200,10 @@ void atualizarCobra() {
    }
 }
 
-int colide_com_rabo(Vec2 *pos, Rabo *r) {
-    if(r) {
-        if(pos->x==r->position.x && pos->y==r->position.y) {
-            return true;
-        } else {
-            return colide_com_rabo(pos,r->r);
-         }
-    }
-    return 0;
-}
-
 int main() {
-srand(time(NULL));
-  carregar();
-   chlib_init();
-    str_pontos=malloc(30*sizeof(char));
+    srand(time(NULL));
+    carregar(); 
+    chlib_init();
     init_cobrinha();
     reposicionar_comida1();
     reposicionar_comida2();
@@ -217,8 +215,8 @@ srand(time(NULL));
             desenharComida1();
             desenharComida2();
         } else {
-            buffer_write_text((buffer_getWidth()/2)-5,buffer_getHeight()/2,"GAME OVER!!");
-              buffer_write_text((buffer_getWidth()/2)-9,(buffer_getHeight()/2)+1,str_pontos);
+            buffer_write_text(&buffer,(buffer.width/2)-5,buffer.height/2,"GAME OVER!!");
+              buffer_write_text(&buffer,(buffer.width/2)-9,(buffer.height/2)+1,str_pontos);
             if(key=='\n' || key==' ') {
             beep();
                 pontos=0;
