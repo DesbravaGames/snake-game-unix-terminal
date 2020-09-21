@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8) 
 project(main)
-set(CMAKE_C_FLAGS "-std=c99")
+set(CMAKE_C_FLAGS "-std=gnu99")
 find_package(Curses REQUIRED)
 include_directories(${CURSES_INCLUDE_DIR})
 

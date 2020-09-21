@@ -9,10 +9,11 @@ CharBuffer buffer_alloc(uint16_t width,uint16_t height) {
     CharBuffer ret;
     ret.width=width;
     ret.height=height;
-    ret.data=calloc(width*height,sizeof(char));
+    ret.data=calloc(1,width*height*sizeof(char));
+    return ret;
 }
 
-void buffer_clear(CharBuffer *buffer,char character) {
+void buffer_clear(CharBuffer *buffer,char character) {  
     memset(buffer->data, character, buffer->width*buffer->height*sizeof(char));
 }
 bool buffer_was_initalized(CharBuffer *buffer) {
@@ -21,7 +22,7 @@ bool buffer_was_initalized(CharBuffer *buffer) {
 void buffer_resize(CharBuffer *buffer,uint16_t width,uint16_t height) {
     buffer->width=width;
     buffer->height=height;
-    buffer->data=realloc(buffer,width*height*sizeof(char));
+    buffer->data=realloc(buffer->data,width*height*sizeof(char));
 }
 char buffer_read(CharBuffer *buffer,uint16_t x,uint16_t y) {
     if(x>=buffer->width || y>=buffer->height) return 0;
