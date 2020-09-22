@@ -57,12 +57,11 @@ struct Snake {
     SnakeTail *r;
 };
 
-
 struct SnakeTail {
     Vec2 position;
     SnakeTail *r;
 };
-void liberarSnakeTail() {
+void freeSnakeTail() {
     if(snake.r) {
         SnakeTail *r=snake.r;
         while(r!=NULL) {
@@ -82,7 +81,7 @@ void init_snake() {
     snake.position.x=buffer->width/2;
     snake.position.y=buffer->height/2;
     snake.r=NULL;
-    liberarSnakeTail();
+    freeSnakeTail();
 }
 void drawSnakeTail(SnakeTail *r) {
  if(r) {
@@ -127,12 +126,12 @@ void createSnakeTail() {
     ////*/
 }
 
-int colide_com_snaketail(Vec2 *pos, SnakeTail *r) {
+int collide_with_snaketail(Vec2 *pos, SnakeTail *r) {
     if(r) {
         if(pos->x==r->position.x && pos->y==r->position.y) {
             return true;
         } else {
-            return colide_com_snaketail(pos,r->r);
+            return collide_with_snaketail(pos,r->r);
          }
     }
     return 0;
@@ -187,7 +186,7 @@ void updateSnake() {
         snake.position.y--;
         if(snake.position.y<1) snake.position.y=height-1;
     }
-   if(colide_com_snaketail(&snake.position,snake.r)) {
+   if(collide_with_snaketail(&snake.position,snake.r)) {
     mode=GAMEOVER;
     beep();
     init_snake();
