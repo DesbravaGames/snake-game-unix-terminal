@@ -6,29 +6,29 @@
 
 #define PLAY 0
 #define GAMEOVER 1
-int modo=PLAY;
-int pontos=0;
-int recorde=0;
+int mode=PLAY;
+int score=0;
+int best_score=0;
 
 
-void salvar() {
+void game_save() {
     FILE *fptr;
-    fptr = fopen("recorde.dat", "w");
+    fptr = fopen("best_score.dat", "w");
     if(fptr) {
-      fprintf(fptr,"%d",recorde);
+      fprintf(fptr,"%d",best_score);
     }
      fclose(fptr);
 
 }
-void carregar() {
+void game_load() {
  FILE *fptr;
- fptr = fopen("recorde.dat", "r");
+ fptr = fopen("best_score.dat", "r");
     if(fptr) {
-        fscanf(fptr,"%d",&recorde);
+        fscanf(fptr,"%d",&best_score);
         fclose(fptr);
     }
 }
-char str_pontos[30];
+char str_score[30];
 
 typedef struct {
     int x,y;
@@ -37,189 +37,189 @@ typedef struct {
 void init_vec2(Vec2 *v) {
     v->x=0;v->y=0;
 }
-typedef struct Rabo Rabo;
-typedef struct Cobrinha Cobrinha;
-Cobrinha cobrinha;
-Vec2 comida1;
-Vec2 comida2;
+typedef struct SnakeTail SnakeTail;
+typedef struct Snake Snake;
+Snake snake;
+Vec2 food1;
+Vec2 food2;
 
-void reposicionar_comida1(){
-        comida1.y=(rand() % (buffer->height-3))+1;
-        comida1.x=(rand() % (buffer->width-3))+1;
+void restart_food1(){
+        food1.y=(rand() % (buffer->height-3))+1;
+        food1.x=(rand() % (buffer->width-3))+1;
 }
-void reposicionar_comida2(){
-        comida2.y=(rand() % (buffer->height-3)+1);
-        comida2.x=(rand() % (buffer->width-3))+1;
+void restart_food2(){
+        food2.y=(rand() % (buffer->height-3)+1);
+        food2.x=(rand() % (buffer->width-3))+1;
 }
-struct Cobrinha {
+struct Snake {
     Vec2 position;
     int direction;
-    Rabo *r;
+    SnakeTail *r;
 };
 
 
-struct Rabo {
+struct SnakeTail {
     Vec2 position;
-    Rabo *r;
+    SnakeTail *r;
 };
-void liberarRabo() {
-    if(cobrinha.r) {
-        Rabo *r=cobrinha.r;
+void liberarSnakeTail() {
+    if(snake.r) {
+        SnakeTail *r=snake.r;
         while(r!=NULL) {
-            Rabo *proximorabo=r->r;
+            SnakeTail *proximosnaketail=r->r;
             free(r);
-            r=proximorabo;
+            r=proximosnaketail;
         }
     }
 }
-void init_rabo(Rabo *rabo) {
-    init_vec2(&rabo->position);
-    rabo->r=NULL;
+void init_snaketail(SnakeTail *snaketail) {
+    init_vec2(&snaketail->position);
+    snaketail->r=NULL;
 }
-void init_cobrinha() {
-    cobrinha.direction=0;
-    init_vec2(&cobrinha.position);
-    cobrinha.position.x=buffer->width/2;
-    cobrinha.position.y=buffer->height/2;
-    cobrinha.r=NULL;
-    liberarRabo();
+void init_snake() {
+    snake.direction=0;
+    init_vec2(&snake.position);
+    snake.position.x=buffer->width/2;
+    snake.position.y=buffer->height/2;
+    snake.r=NULL;
+    liberarSnakeTail();
 }
-void desenharRabo(Rabo *r) {
+void drawSnakeTail(SnakeTail *r) {
  if(r) {
         if(r->r) {
         buffer_write(buffer,r->position.x,r->position.y,'o');
-        desenharRabo(r->r);
+        drawSnakeTail(r->r);
         } else {
             buffer_write(buffer,r->position.x,r->position.y,'o');
         }
     }
 }
-void desenharCobrinha() {
-    buffer_write(buffer,cobrinha.position.x,cobrinha.position.y,'O');
-    desenharRabo(cobrinha.r);
+void drawSnake() {
+    buffer_write(buffer,snake.position.x,snake.position.y,'O');
+    drawSnakeTail(snake.r);
 }
-void desenharComida1() {
-    buffer_write(buffer,comida1.x,comida1.y,'x');
+void drawfood1() {
+    buffer_write(buffer,food1.x,food1.y,'x');
 }
-void desenharComida2() {
-    buffer_write(buffer,comida2.x,comida2.y,'x');
+void drawfood2() {
+    buffer_write(buffer,food2.x,food2.y,'x');
 }
 
-void atualizarRabo(Rabo *r) {
+void updateSnakeTail(SnakeTail *r) {
    if(r->r) {
-       atualizarRabo(r->r);
+       updateSnakeTail(r->r);
       r->r->position.x=r->position.x;
       r->r->position.y=r->position.y;
     }
 }
-void criarRabo() {
+void createSnakeTail() {
  // RABO NOVO
-    Rabo *r=malloc(sizeof(Rabo));
+    SnakeTail *r=malloc(sizeof(SnakeTail));
         r->r=NULL;
-        r->position.x=cobrinha.position.x;
-        r->position.y=cobrinha.position.y;
+        r->position.x=snake.position.x;
+        r->position.y=snake.position.y;
 
-    Rabo *ultimoRabo=cobrinha.r;
-    if(ultimoRabo) {
-        while(ultimoRabo->r) {ultimoRabo=ultimoRabo->r;}
-        ultimoRabo->r=r;
-    } else cobrinha.r=r;
+    SnakeTail *lastSnakeTail=snake.r;
+    if(lastSnakeTail) {
+        while(lastSnakeTail->r) {lastSnakeTail=lastSnakeTail->r;}
+        lastSnakeTail->r=r;
+    } else snake.r=r;
     ////*/
 }
 
-int colide_com_rabo(Vec2 *pos, Rabo *r) {
+int colide_com_snaketail(Vec2 *pos, SnakeTail *r) {
     if(r) {
         if(pos->x==r->position.x && pos->y==r->position.y) {
             return true;
         } else {
-            return colide_com_rabo(pos,r->r);
+            return colide_com_snaketail(pos,r->r);
          }
     }
     return 0;
 }
-void atualizarCobra() {
+void updateSnake() {
     int width=buffer->width-2;
     int height=buffer->height-2;
     int key=chlib_getKey();
 
     if(key) {
-        if((key==KEY_UP && cobrinha.direction!=KEY_DOWN ) ||
-            (key==KEY_DOWN && cobrinha.direction!=KEY_UP ) ||
-            (key==KEY_LEFT && cobrinha.direction!=KEY_RIGHT) ||
-            (key==KEY_RIGHT && cobrinha.direction!=KEY_LEFT)
+        if((key==KEY_UP && snake.direction!=KEY_DOWN ) ||
+            (key==KEY_DOWN && snake.direction!=KEY_UP ) ||
+            (key==KEY_LEFT && snake.direction!=KEY_RIGHT) ||
+            (key==KEY_RIGHT && snake.direction!=KEY_LEFT)
             ) {
-                cobrinha.direction=key;
+                snake.direction=key;
             }
     }
 
-    if(cobrinha.r){
-        cobrinha.r->position.x=cobrinha.position.x;
-        cobrinha.r->position.y=cobrinha.position.y;
-        if(cobrinha.r->r) { atualizarRabo(cobrinha.r);}
+    if(snake.r){
+        snake.r->position.x=snake.position.x;
+        snake.r->position.y=snake.position.y;
+        if(snake.r->r) { updateSnakeTail(snake.r);}
      }
-    if(cobrinha.position.x==comida1.x &&
-        cobrinha.position.y==comida1.y) {///*
-            reposicionar_comida1();
-                pontos++;
-                criarRabo();
+    if(snake.position.x==food1.x &&
+        snake.position.y==food1.y) {///*
+            restart_food1();
+                score++;
+                createSnakeTail();
                 beep();
             }
-        if(cobrinha.position.x==comida2.x &&
-        cobrinha.position.y==comida2.y) {///*
-            reposicionar_comida2();
-                pontos++;
-                criarRabo();
+        if(snake.position.x==food2.x &&
+        snake.position.y==food2.y) {///*
+            restart_food2();
+                score++;
+                createSnakeTail();
                 beep();
             }
-    if(cobrinha.direction==KEY_RIGHT) {
-        cobrinha.position.x++;
-        if(cobrinha.position.x>width) cobrinha.position.x=1;
+    if(snake.direction==KEY_RIGHT) {
+        snake.position.x++;
+        if(snake.position.x>width) snake.position.x=1;
     }
-    if(cobrinha.direction==KEY_LEFT) {
-        cobrinha.position.x--;
-        if(cobrinha.position.x<1) cobrinha.position.x=width-1;
+    if(snake.direction==KEY_LEFT) {
+        snake.position.x--;
+        if(snake.position.x<1) snake.position.x=width-1;
     }
-    if(cobrinha.direction==KEY_DOWN) {
-        cobrinha.position.y++;
-        if(cobrinha.position.y>height) cobrinha.position.y=1;
+    if(snake.direction==KEY_DOWN) {
+        snake.position.y++;
+        if(snake.position.y>height) snake.position.y=1;
     }
-    if(cobrinha.direction==KEY_UP) {
-        cobrinha.position.y--;
-        if(cobrinha.position.y<1) cobrinha.position.y=height-1;
+    if(snake.direction==KEY_UP) {
+        snake.position.y--;
+        if(snake.position.y<1) snake.position.y=height-1;
     }
-   if(colide_com_rabo(&cobrinha.position,cobrinha.r)) {
-    modo=GAMEOVER;
+   if(colide_com_snaketail(&snake.position,snake.r)) {
+    mode=GAMEOVER;
     beep();
-    init_cobrinha();
-    if(pontos>recorde) recorde=pontos;
-    if(pontos==recorde){
-     sprintf(str_pontos, "Pontos: %d NOVO RECORDE!", pontos);
-        salvar();
-    }   else sprintf(str_pontos, "Pontos: %d Recorde: %d", pontos,recorde);
+    init_snake();
+    if(score>best_score) best_score=score;
+    if(score==best_score){
+     sprintf(str_score, "score: %d NEW Record!", score);
+        game_save();
+    }   else sprintf(str_score, "score: %d Best Score: %d", score,best_score);
 
    }
 }
 /* main.c */
 int main(int argc, char *argv[]) {
     srand(time(NULL));
-    carregar(); 
+    game_load(); 
     chlib_init();
-    init_cobrinha();
-    reposicionar_comida1();
-    reposicionar_comida2();
+    init_snake();
+    restart_food1();
+    restart_food2();
     while(chlib_getKey()!='x') {
-        if(modo==PLAY) {
-            atualizarCobra();
-            desenharCobrinha();
-            desenharComida1();
-            desenharComida2();
+        if(mode==PLAY) {
+            updateSnake();
+            drawSnake();
+            drawfood1();
+            drawfood2();
         } else {
             buffer_write_text(buffer,(buffer->width/2)-5,buffer->height/2,"GAME OVER!!");
-              buffer_write_text(buffer,(buffer->width/2)-9,(buffer->height/2)+1,str_pontos);
+              buffer_write_text(buffer,(buffer->width/2)-9,(buffer->height/2)+1,str_score);
             if(key=='\n' || key==' ') {
             beep();
-                pontos=0;
-                    modo=PLAY;
+                score=0;
+                    mode=PLAY;
             }
         }
         chlib_update();

@@ -43,17 +43,21 @@ void buffer_write_text(CharBuffer *buffer,uint16_t x, uint16_t y,char *text) {
     }
 };
 void buffer_draw_line(CharBuffer *buffer,uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,char character) {
-
-  uint16_t dx = abs(x1-x0), sx = x0<x1 ? 1 : -1;
-  uint16_t dy = abs(y1-y0), sy = y0<y1 ? 1 : -1;
-  uint16_t err = (dx>dy ? dx : -dy)/2, e2;
-
-  for(;;){
-    buffer_write(buffer,x0,y0,character);
-    if (x0==x1 && y0==y1) break;
-    e2 = err;
-    if (e2 >-dx) { err -= dy; x0 += sx; }
-    if (e2 < dy) { err += dx; y0 += sy; }
-  }
+    float dx, dy, p, x, y;
+	dx=x1-x0;
+	dy=y1-y0; 
+	x=x0;
+	y=y0; 
+	p=2*dy-dx;
+	while(x<x1) {
+        buffer_write(buffer,x,y,character);
+		if(p>=0) {
+			y=y+1;
+			p=p+2*dy-2*dx;
+		} else {
+			p=p+2*dy;
+		}
+		x=x+1;
+	}
 }
 
