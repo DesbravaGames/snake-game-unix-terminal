@@ -1,0 +1,5 @@
+* show score and best score on top of screen
+* setup custom snake velocity
+* same snake speed at x and y axis
+* limit frames and improve performance 
+* put instructions

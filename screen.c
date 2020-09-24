@@ -1,10 +1,3 @@
-#ifdef __unix__
-#define _BSD_SOURCE
-# include <unistd.h>
-#elif defined _WIN32
-# include <windows.h>
-#define sleep(x) Sleep(1000 * (x))
-#endif
 
 #include "charbuffer.h"
 #include "ncurses.h"
@@ -15,8 +8,7 @@ CharBuffer buffer_str;
 WINDOW *stdscr;
 
 int key;
-
-void chlib_init() {
+void screen_init() {
     stdscr=initscr();
     buffer_str=buffer_alloc(getmaxx(stdscr),getmaxy(stdscr));
     buffer=&buffer_str;
@@ -25,22 +17,23 @@ void chlib_init() {
     raw();
     nodelay(stdscr, TRUE);
 }
-int chlib_getKey() {
+int screen_getKey() {
     return key;
 }
-void draw_border() {
-    buffer_draw_line(buffer,0,0,buffer->width-1,0,'+');
-    buffer_draw_line(buffer,0,0,0,buffer->height-1,'P');
-    buffer_draw_line(buffer,0,buffer->height-1,buffer->width-1,buffer->height-1,'+');
-    buffer_draw_line(buffer,buffer->width-1,0,buffer->width-1,buffer->height-1,'P');
-}
-void chlib_update() {
+void screen_update() {
         int new_width=getmaxx(stdscr);
         int new_height=getmaxy(stdscr);
         if(new_width!=buffer->width || new_height!=buffer->height) {
             buffer_resize(buffer,new_width,new_height);
         }
-        draw_border();
+      
+      /// BORDERS
+
+        buffer_draw_line(buffer,0,0,buffer->width-1,0,'+');
+        buffer_draw_line(buffer,0,0,0,buffer->height-1,'P');
+        buffer_draw_line(buffer,0,buffer->height-1,buffer->width-1,buffer->height-1,'+');
+        buffer_draw_line(buffer,buffer->width-1,0,buffer->width-1,buffer->height-1,'P');
+
        move(0,0);
         for(int y=0;y<buffer->height;y++) {
             for(int x=0;x<buffer->width;x++) {
@@ -51,9 +44,8 @@ void chlib_update() {
 
         buffer_clear(buffer,' ');
         key=getch();
-        usleep(1000*70);
 
 }
-void chlib_end() {
+void screen_end() {
     endwin();
 }
