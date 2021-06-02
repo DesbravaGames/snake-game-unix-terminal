@@ -47,9 +47,9 @@ struct SnakeTail {
     Vec2 position;
     SnakeTail *r;
 };
-Snake snake;
-Vec2 food1;
-Vec2 food2;
+Snake snake={0};
+Vec2 food1={0};
+Vec2 food2={0};
 
 void recreate_food(Vec2 *food){
     food->y=(rand() % (buffer->height-3))+1;
@@ -99,25 +99,26 @@ void updateSnakeTail(SnakeTail *r) {
 }
 void createSnakeTail() {
  // RABO NOVO
-    SnakeTail *r=malloc(sizeof(SnakeTail));
+    SnakeTail *r=calloc(1,sizeof(SnakeTail));
         r->r=NULL;
-        r->position.x=snake.x;
-        r->position.y=snake.y;
 
     SnakeTail *lastSnakeTail=snake.r;
     if(lastSnakeTail) {
         while(lastSnakeTail->r) {lastSnakeTail=lastSnakeTail->r;}
         lastSnakeTail->r=r;
     } else snake.r=r;
+
+    r->position.x=lastSnakeTail->position.x;
+    r->position.y=lastSnakeTail->position.y;
     ////*/
 }
 
 bool snake_collide_withself(Snake *pos, SnakeTail *r) {
     if(!r) return false;
-    if(pos->x==r->position.x && pos->y==r->position.y) {
+    if((int)(pos->x)==(int)(r->position.x) && (int)(pos->y)==(int)(r->position.y)) {
         return true;
     } else {
-    return snake_collide_withself(pos,r->r);
+        return snake_collide_withself(pos,r->r);
     }
 }
 bool snake_eat_food(Snake snake,Vec2 food) {
@@ -165,22 +166,22 @@ void updateSnake() {
         if(snake.x<1) snake.x=width-1;
     }
     if(snake.direction==KEY_DOWN) {
-        snake.y+=0.5;
+        snake.y+=0.7;
         if(snake.y>height) snake.y=1;
     }
     if(snake.direction==KEY_UP) {
-        snake.y-=0.5;
+        snake.y-=0.7;
         if(snake.y<1) snake.y=height-1;
     }
    if(snake_collide_withself(&snake,snake.r)) {
-    mode=GAMEOVER;
-    beep();
-    init_snake();
-    if(score>best_score) best_score=score;
-    if(score==best_score){
-        sprintf(str_score, "score: %d NEW Record!", score);
-        game_save();
-    }   else sprintf(str_score, "score: %d Best Score: %d", score,best_score);
+        mode=GAMEOVER;
+        beep();
+        init_snake();
+        if(score>best_score) best_score=score;
+        if(score==best_score){
+            sprintf(str_score, "score: %d NEW Record!", score);
+            game_save();
+        }   else sprintf(str_score, "score: %d Best Score: %d", score,best_score);
 
    }
 }
