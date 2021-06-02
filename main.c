@@ -19,7 +19,7 @@ void game_save() {
     if(fptr) {
       fprintf(fptr,"%d",best_score);
     }
-     fclose(fptr);
+    fclose(fptr);
 
 }
 void game_load() {
@@ -101,15 +101,17 @@ void createSnakeTail() {
  // RABO NOVO
     SnakeTail *r=calloc(1,sizeof(SnakeTail));
         r->r=NULL;
+   
 
     SnakeTail *lastSnakeTail=snake.r;
     if(lastSnakeTail) {
         while(lastSnakeTail->r) {lastSnakeTail=lastSnakeTail->r;}
         lastSnakeTail->r=r;
     } else snake.r=r;
-
-    r->position.x=lastSnakeTail->position.x;
-    r->position.y=lastSnakeTail->position.y;
+    if(lastSnakeTail) {
+        r->position.x=lastSnakeTail->position.x;
+        r->position.y=lastSnakeTail->position.y;
+    }
     ////*/
 }
 
